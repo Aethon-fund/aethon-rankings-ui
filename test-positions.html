@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Positions</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .error { color: #f44336; }
+        .success { color: #4CAF50; }
+        pre { background: #333; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Testing Positions Endpoint</h1>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        async function test() {
+            const url = 'http://localhost:8001/positions/long?year=2025';
+            output.innerHTML += `<div>Testing: ${url}</div>`;
+            
+            try {
+                const response = await fetch(url);
+                output.innerHTML += `<div class="${response.ok ? 'success' : 'error'}">Status: ${response.status}</div>`;
+                
+                const data = await response.json();
+                output.innerHTML += `<div class="success">Got ${data.length} positions</div>`;
+                output.innerHTML += '<pre>' + JSON.stringify(data[0], null, 2) + '</pre>';
+                
+            } catch (error) {
+                output.innerHTML += `<div class="error">Error: ${error.message}</div>`;
+                console.error(error);
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

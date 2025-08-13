@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Feature Test</title>
+    <link rel="stylesheet" href="css/style.css?v=1.3">
+    <style>
+        body { padding: 20px; background: var(--bg-primary); color: var(--text-primary); }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid var(--gold); }
+    </style>
+</head>
+<body>
+    <h1>Frontend Feature Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Expandable Chart Test</h2>
+        <h2>
+            Top Characteristics
+            <button class="expand-chart-btn" onclick="alert('Chart expand clicked!')" title="Toggle chart size">
+                <span id="chartExpandIcon">⛶</span>
+            </button>
+        </h2>
+        <p>Button should be visible above ↑</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Expandable Characteristic Test</h2>
+        <div class="characteristic-item expandable" id="test_char_1">
+            <div class="char-main-content">
+                <div class="char-header" onclick="toggleTestDetail()">
+                    <span class="char-text">Gain/Loss Signal: Bullish</span>
+                    <div class="char-meta">
+                        <span class="char-confidence">72%</span>
+                        <span class="expand-icon" id="expand_test">▶</span>
+                    </div>
+                </div>
+                
+                <div class="char-detail" id="detail_test" style="display: none;">
+                    <p class="char-explanation">Gain probability 72.0% indicates favorable risk/reward</p>
+                    
+                    <div class="char-feedback">
+                        <label>How accurate is this analysis?</label>
+                        <div class="feedback-controls">
+                            <span class="slider-label">Disagree</span>
+                            <input type="range" class="feedback-slider" min="0" max="100" value="50" oninput="updateTestSlider(this.value)">
+                            <span class="slider-label">Agree</span>
+                            <span class="slider-value" id="test_slider_value">50%</span>
+                        </div>
+                        <button class="submit-char-feedback-btn" onclick="alert('Feedback submitted!')">
+                            Submit Feedback
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTestDetail() {
+            const detail = document.getElementById('detail_test');
+            const icon = document.getElementById('expand_test');
+            if (detail.style.display === 'none') {
+                detail.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                detail.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+        
+        function updateTestSlider(value) {
+            document.getElementById('test_slider_value').textContent = value + '%';
+        }
+        
+        // Test if main script functions exist
+        console.log('Script loaded. Testing functions...');
+        console.log('typeof toggleChartExpand:', typeof window.toggleChartExpand);
+        console.log('typeof toggleCharacteristicDetail:', typeof window.toggleCharacteristicDetail);
+    </script>
+    
+    <script src="js/api-config.js?v=1.3"></script>
+    <script src="js/script.js?v=1.3"></script>
+</body>
+</html>

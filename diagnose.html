@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnose Loading Issue</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+        pre { background: #333; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Diagnosing Frontend Loading Issue</h1>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = msg;
+            output.appendChild(div);
+        }
+        
+        async function diagnose() {
+            log('=== Starting Diagnosis ===');
+            
+            // 1. Check if we can reach the API
+            log('\n1. Testing API connection...');
+            try {
+                const response = await fetch('http://localhost:8001/models/active');
+                if (response.ok) {
+                    log('✓ API is reachable', 'success');
+                } else {
+                    log('✗ API returned error: ' + response.status, 'error');
+                }
+            } catch (e) {
+                log('✗ Cannot connect to API: ' + e.message, 'error');
+            }
+            
+            // 2. Test rankings endpoint directly
+            log('\n2. Testing rankings endpoint...');
+            const today = new Date().toISOString().split('T')[0];
+            try {
+                const response = await fetch(`http://localhost:8001/rankings/${today}?model=all`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✓ Rankings endpoint works. Got ${data.length} rankings`, 'success');
+                    
+                    if (data.length > 0) {
+                        log(`\n   First ranking:`, 'info');
+                        log(`   Ticker: ${data[0].ticker}`, 'info');
+                        log(`   Characteristics: ${data[0].characteristics.length}`, 'info');
+                    }
+                } else {
+                    log('✗ Rankings endpoint error: ' + response.status, 'error');
+                    const text = await response.text();
+                    log('   Response: ' + text, 'error');
+                }
+            } catch (e) {
+                log('✗ Error fetching rankings: ' + e.message, 'error');
+            }
+            
+            // 3. Check JavaScript files
+            log('\n3. Checking JavaScript functions...');
+            
+            log('\n   Loading api-config.js...');
+            const configScript = document.createElement('script');
+            configScript.src = 'js/api-config.js?v=' + Date.now();
+            configScript.onload = () => {
+                log('   ✓ api-config.js loaded', 'success');
+                if (typeof API_CONFIG !== 'undefined') {
+                    log('   ✓ API_CONFIG is defined', 'success');
+                    log('   Base URL: ' + API_CONFIG.baseUrl, 'info');
+                } else {
+                    log('   ✗ API_CONFIG is not defined', 'error');
+                }
+                
+                // Load script.js
+                log('\n   Loading script.js...');
+                const mainScript = document.createElement('script');
+                mainScript.src = 'js/script.js?v=' + Date.now();
+                mainScript.onload = () => {
+                    log('   ✓ script.js loaded', 'success');
+                    
+                    // Check key functions
+                    const functions = [
+                        'loadRankings',
+                        'displayRankings', 
+                        'toggleChartExpand',
+                        'toggleCharacteristicDetail'
+                    ];
+                    
+                    functions.forEach(fn => {
+                        if (typeof window[fn] === 'function') {
+                            log(`   ✓ ${fn} function exists`, 'success');
+                        } else {
+                            log(`   ✗ ${fn} function missing`, 'error');
+                        }
+                    });
+                    
+                    // Try to call loadRankings
+                    log('\n4. Attempting to load rankings...');
+                    
+                    // Create minimal DOM elements
+                    const container = document.createElement('div');
+                    container.id = 'rankingsContainer';
+                    document.body.appendChild(container);
+                    
+                    const dateInput = document.createElement('input');
+                    dateInput.type = 'date';
+                    dateInput.id = 'rankingDate';
+                    dateInput.value = today;
+                    document.body.appendChild(dateInput);
+                    
+                    const filterInputs = ['positionFilter', 'modelFilter'];
+                    filterInputs.forEach(id => {
+                        const select = document.createElement('select');
+                        select.id = id;
+                        select.innerHTML = '<option value="">All</option>';
+                        document.body.appendChild(select);
+                    });
+                    
+                    // Now try to load
+                    if (typeof loadRankings === 'function') {
+                        log('   Calling loadRankings()...', 'info');
+                        loadRankings().then(() => {
+                            log('   ✓ loadRankings completed', 'success');
+                            if (typeof currentRankings !== 'undefined' && currentRankings.length > 0) {
+                                log(`   ✓ Loaded ${currentRankings.length} rankings`, 'success');
+                            }
+                        }).catch(e => {
+                            log('   ✗ loadRankings error: ' + e.message, 'error');
+                            console.error(e);
+                        });
+                    }
+                };
+                mainScript.onerror = () => {
+                    log('   ✗ Failed to load script.js', 'error');
+                };
+                document.head.appendChild(mainScript);
+            };
+            configScript.onerror = () => {
+                log('   ✗ Failed to load api-config.js', 'error');
+            };
+            document.head.appendChild(configScript);
+        }
+        
+        diagnose();
+    </script>
+</body>
+</html>

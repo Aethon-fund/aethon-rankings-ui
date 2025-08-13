@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .ranking { background: #333; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { color: #f44336; }
+        .success { color: #4CAF50; }
+    </style>
+</head>
+<body>
+    <h1>Minimal Rankings Test</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+    
+    <script>
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        function log(msg, type = '') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            status.appendChild(div);
+            console.log(msg);
+        }
+        
+        async function test() {
+            log('Starting test...');
+            
+            try {
+                // Test 1: Direct API call
+                log('Test 1: Fetching rankings from API...');
+                const today = new Date().toISOString().split('T')[0];
+                const url = `http://localhost:8001/rankings/${today}?model=all`;
+                log('URL: ' + url);
+                
+                const response = await fetch(url);
+                log('Response status: ' + response.status);
+                
+                if (!response.ok) {
+                    throw new Error('API returned ' + response.status);
+                }
+                
+                const data = await response.json();
+                log('Success! Got ' + data.length + ' rankings', 'success');
+                
+                // Display first 3 rankings
+                results.innerHTML = '<h2>First 3 Rankings:</h2>';
+                data.slice(0, 3).forEach(ranking => {
+                    const div = document.createElement('div');
+                    div.className = 'ranking';
+                    div.innerHTML = `
+                        <strong>#${ranking.rank} ${ranking.ticker}</strong><br>
+                        Confidence: ${(ranking.confidence_score * 100).toFixed(0)}%<br>
+                        Characteristics: ${ranking.characteristics.length}
+                    `;
+                    results.appendChild(div);
+                });
+                
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Start test immediately
+        test();
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Working Rankings</title>
+    <link rel="stylesheet" href="css/style.css?v=1.2">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stock Rankings - Simple Version</h1>
+            <div class="controls">
+                <input type="date" id="rankingDate" onchange="loadRankings()">
+            </div>
+        </header>
+        
+        <main>
+            <div id="rankingsContainer" class="rankings-container">
+                <div class="loading">Loading...</div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        console.log('Simple page loading...');
+        
+        // Set date on load
+        document.getElementById('rankingDate').value = new Date().toISOString().split('T')[0];
+        
+        async function loadRankings() {
+            console.log('loadRankings called');
+            const container = document.getElementById('rankingsContainer');
+            const date = document.getElementById('rankingDate').value || new Date().toISOString().split('T')[0];
+            
+            container.innerHTML = '<div class="loading">Loading rankings...</div>';
+            
+            try {
+                const url = `http://localhost:8001/rankings/${date}?model=all`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url);
+                console.log('Response:', response.status);
+                
+                if (!response.ok) throw new Error('Failed: ' + response.status);
+                
+                const data = await response.json();
+                console.log('Got data:', data.length, 'rankings');
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<div>No rankings</div>';
+                    return;
+                }
+                
+                container.innerHTML = data.map(r => `
+                    <div class="ranking-card">
+                        <div class="ranking-header">
+                            <div class="rank-info">
+                                <div class="rank-number">#${r.rank}</div>
+                                <div class="ticker-symbol">${r.ticker}</div>
+                                <div class="confidence-score">Score: ${(r.confidence_score * 100).toFixed(0)}%</div>
+                            </div>
+                        </div>
+                        <div class="characteristics">
+                            <h4>Characteristics:</h4>
+                            ${r.characteristics.slice(0, 3).map(c => `
+                                <div>${c.text} (${(c.confidence * 100).toFixed(0)}%)</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        // Load on page load
+        loadRankings();
+    </script>
+</body>
+</html>
