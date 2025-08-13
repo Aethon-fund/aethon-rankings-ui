@@ -1,7 +1,10 @@
 // API Configuration
 const API_CONFIG = {
-    // Update this to your backend URL
-    baseUrl: window.location.hostname === 'localhost' ? 'http://localhost:8001' : 'https://your-api-domain.com',
+    // Backend API URL - Update this with your deployed backend URL
+    // For production, replace 'https://api.aethon.fund' with your actual backend URL
+    baseUrl: window.location.hostname === 'localhost' 
+        ? 'http://localhost:8001' 
+        : 'https://api.aethon.fund', // TODO: Replace with your actual backend API URL
     
     // API endpoints
     endpoints: {
